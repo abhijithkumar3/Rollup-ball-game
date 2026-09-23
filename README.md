@@ -17,7 +17,7 @@ RollUp is a fast, arcade-style endless sky runner. Guide the ball across the flo
 
 | Action | Keyboard | Mouse or touch |
 | --- | --- | --- |
-| Move | `A` / `D` or `Left` / `Right` | Move the pointer |
+| Move | `A` / `D` or `Left` / `Right` | Hold the on-screen left/right buttons or drag |
 | Jump | `Up` | Click or tap |
 | Pause | `Space` | - |
 | Reset after game over | `R` | Click or tap |

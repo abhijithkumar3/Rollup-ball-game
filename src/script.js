@@ -63,6 +63,10 @@ ui.innerHTML = `
         <span>Pause <kbd>SPACE</kbd></span>
         <span>Reset <kbd>R</kbd></span>
   </div>
+    <div id="touch-controls" aria-label="Mobile movement controls">
+        <button id="touch-left" type="button" aria-label="Move left">←</button>
+        <button id="touch-right" type="button" aria-label="Move right">→</button>
+    </div>
 `;
 document.body.appendChild(ui);
 
@@ -278,6 +282,22 @@ style.textContent = `
         font: 700 10px Arial, sans-serif;
         letter-spacing: 0.04em;
     }
+    #touch-controls { display: none; }
+    #touch-controls button {
+        width: 58px;
+        height: 52px;
+        border: 2px solid #fff4bf;
+        border-bottom-width: 5px;
+        border-radius: 8px;
+        background: rgba(139, 92, 246, 0.82);
+        color: #fff4bf;
+        font-size: 30px;
+        line-height: 1;
+        cursor: pointer;
+        touch-action: none;
+        user-select: none;
+    }
+    #touch-controls button:active { transform: translateY(3px); border-bottom-width: 2px; background: #3b82f6; }
   @keyframes bgDrift {
     0% { transform: scale(1) translate3d(-3%, 0, 0); }
     100% { transform: scale(1.15) translate3d(3%, 2%, 0); }
@@ -326,6 +346,15 @@ style.textContent = `
       padding: 7px 10px;
     }
         #controls-bar kbd { min-width: 18px; height: 18px; padding: 0 4px; font-size: 9px; }
+        #touch-controls {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 62px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: auto;
+        }
         #developer-credit { right: 12px; bottom: 12px; }
   }
 `;
@@ -339,6 +368,8 @@ const developerCard = document.getElementById('developer-card');
 const developerClose = document.getElementById('developer-close');
 const distanceValue = document.getElementById('distance-value');
 const shapeValue = document.getElementById('shape-value');
+const touchLeft = document.getElementById('touch-left');
+const touchRight = document.getElementById('touch-right');
 const ballSwatches = [...document.querySelectorAll('.ball-swatch')];
 let playerColor = '#ff7a59';
 const SHAPES = ['ball', 'diamond', 'star', 'hexagon'];
@@ -347,6 +378,22 @@ let previousShape = SHAPES[0];
 let shapeMix = 1;
 let shapeStage = 0;
 let gameStarted = false;
+
+const setTouchDirection = key => {
+    if (!gameStarted) return;
+    mouseMode = 0;
+    keyInput[key] = 1;
+};
+const clearTouchDirection = key => {
+    keyInput[key] = 0;
+};
+for (const [button, key] of [[touchLeft, 'ArrowLeft'], [touchRight, 'ArrowRight']])
+{
+    button.addEventListener('pointerdown', event => { event.preventDefault(); setTouchDirection(key); });
+    button.addEventListener('pointerup', event => { event.preventDefault(); clearTouchDirection(key); });
+    button.addEventListener('pointercancel', () => clearTouchDirection(key));
+    button.addEventListener('pointerleave', () => clearTouchDirection(key));
+}
 
 startButton.addEventListener('click', () => {
     gameStarted = true;
@@ -787,8 +834,8 @@ else
         }
 
         // simulate mouse down on touch start
-        ontouchstart = e=> { e.preventDefault(); onmouseup(); };
-        ontouchend = e=> { e.preventDefault(); onmousedown(); };
+        ontouchstart = e=> { if (e.target.closest('#touch-controls')) return; e.preventDefault(); onmouseup(); };
+        ontouchend = e=> { if (e.target.closest('#touch-controls')) return; e.preventDefault(); onmousedown(); };
         ontouchmove = e=>
         {
             e.preventDefault();
