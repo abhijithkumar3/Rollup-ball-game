@@ -791,10 +791,19 @@ else
         }
 
         // simulate mouse down on touch start
-        ontouchstart = e=> { if (e.target.closest('#touch-controls')) return; e.preventDefault(); onmouseup(); };
-        ontouchend = e=> { if (e.target.closest('#touch-controls')) return; e.preventDefault(); onmousedown(); };
+        ontouchstart = e=> {
+            if (e.target.closest('button, a')) return;
+            e.preventDefault();
+            onmouseup();
+        };
+        ontouchend = e=> {
+            if (e.target.closest('button, a')) return;
+            e.preventDefault();
+            onmousedown();
+        };
         ontouchmove = e=>
         {
+            if (e.target.closest('button, a')) return;
             e.preventDefault();
             // simulate mouse move on touch move
             for (const touch of e.touches)
