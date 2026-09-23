@@ -370,14 +370,19 @@ let previousShape = SHAPES[0];
 let shapeMix = 1;
 let shapeStage = 0;
 let gameStarted = false;
+let mobileDirection = 0;
+let mobileTouchStartedAt = 0;
+let mobileTouchMoved = false;
 
 const setTouchDirection = key => {
     if (!gameStarted) return;
     mouseMode = 0;
+    mobileDirection = key === 'ArrowLeft' ? -1 : 1;
     keyInput[key] = 1;
 };
 const clearTouchDirection = key => {
     keyInput[key] = 0;
+    mobileDirection = 0;
 };
 for (const [button, key] of [[touchLeft, 'ArrowLeft'], [touchRight, 'ArrowRight']])
 {
@@ -385,13 +390,18 @@ for (const [button, key] of [[touchLeft, 'ArrowLeft'], [touchRight, 'ArrowRight'
     button.addEventListener('pointerup', event => { event.preventDefault(); clearTouchDirection(key); });
     button.addEventListener('pointercancel', () => clearTouchDirection(key));
     button.addEventListener('pointerleave', () => clearTouchDirection(key));
+    button.addEventListener('touchstart', event => { event.preventDefault(); setTouchDirection(key); }, { passive: false });
+    button.addEventListener('touchend', event => { event.preventDefault(); clearTouchDirection(key); }, { passive: false });
 }
 
-startButton.addEventListener('click', () => {
+const startGame = () => {
+    if (gameStarted) return;
     gameStarted = true;
     startScreen.hidden = true;
     startScreen.remove();
-});
+};
+startButton.addEventListener('click', startGame);
+startButton.addEventListener('touchend', event => { event.preventDefault(); startGame(); }, { passive: false });
 
 developerButton.addEventListener('click', () => {
     const isOpen = !developerCard.hidden;
@@ -452,6 +462,7 @@ const resetGame = () => {
     trackRows = [];
     isOut = false;
     isPaused = false;
+    mobileDirection = 0;
     shapeIndex = 0;
     previousShape = SHAPES[0];
     shapeMix = 1;
@@ -622,7 +633,9 @@ let update = () =>
         // update physics
         if (ENHANCED)
         {
-            if (mouseMode)
+            if (mobileDirection)
+                x += mobileDirection * .12;
+            else if (mouseMode)
                 x += mouseX/a.width/2 - .25;
             else
             {
@@ -794,20 +807,25 @@ else
         ontouchstart = e=> {
             if (e.target.closest('button, a')) return;
             e.preventDefault();
-            onmouseup();
+            mobileTouchStartedAt = performance.now();
+            mobileTouchMoved = false;
+            mobileDirection = e.touches[0].clientX < innerWidth / 2 ? -1 : 1;
+            mouseMode = 0;
         };
         ontouchend = e=> {
             if (e.target.closest('button, a')) return;
             e.preventDefault();
-            onmousedown();
+            const wasTap = performance.now() - mobileTouchStartedAt < 220 && !mobileTouchMoved;
+            mobileDirection = 0;
+            if (wasTap) onmousedown();
         };
         ontouchmove = e=>
         {
             if (e.target.closest('button, a')) return;
             e.preventDefault();
-            // simulate mouse move on touch move
-            for (const touch of e.touches)
-                onmousemove({ clientX: touch.clientX, clientY: touch.clientY });
+            mobileTouchMoved = true;
+            const touch = e.touches[0];
+            mobileDirection = touch.clientX < innerWidth / 2 ? -1 : 1;
         }
     }
     
